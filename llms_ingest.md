@@ -1,6 +1,33 @@
-Table of Contents
+<!-- TOC depthFrom:2 depthTo:3 -->
+- [SDK Connections and Configurations](#sdk-connections-and-configurations)
+  - [API Connection](#api-connection)
+  - [Direct MongoDB Connection](#direct-mongodb-connection)
+  - [Cloud Media Credentials (AWS)](#cloud-media-credentials-aws)
+- [Loading Datasets](#loading-datasets)
+  - [Image Folders](#image-folders)
+  - [Custom Formats](#custom-formats)
+  - [Setting Values](#setting-values)
+  - [Datasets with cloud-backed media](#datasets-with-cloud-backed-media)
+  - [Uploading Data to the Cloud](#uploading-data-to-the-cloud)
+- [Dataset Setup](#dataset-setup)
+  - [Computing Metadata](#computing-metadata)
+  - [Multiple Media Fields](#multiple-media-fields)
+- [Grouped Datasets](#grouped-datasets)
+  - [Grouped Datasets](#grouped-datasets-1)
+  - [Creating Grouped Datasets](#creating-grouped-datasets)
+  - [Active Slice and Changing Slices](#active-slice-and-changing-slices)
+  - [Flattened Views](#flattened-views)
+- [3D Datasets](#3d-datasets)
+  - [3D samples](#3d-samples)
+  - [Example: Grouped Dataset with 3D](#example-grouped-dataset-with-3d)
+- [Miscellaneous](#miscellaneous)
+  - [Saved Views](#saved-views)
+  - [Updating Samples](#updating-samples)
+- [What’s Next?](#whats-next)
 
-- [Docs](https://docs.voxel51.com/#) >
+<!-- /TOC -->
+
+---
 
 # SDK Connections and Configurations
 
@@ -19,7 +46,7 @@ For high-volume or production workloads, you may configure a direct MongoDB conn
 To work with cloud media locally with your SDK, see the above link to configure your cloud credentials.
 
 # Loading Datasets 
-## [Loading Datasets: Image Folders](https://docs.voxel51.com/user_guide/dataset_creation/index.html#loading-images)
+## [Image Folders](https://docs.voxel51.com/user_guide/dataset_creation/index.html#loading-images)
 
 If you’re just getting started with a project and all you have is a bunch of image files, you can easily load them into a FiftyOne dataset and start visualizing them in the App:
 
@@ -48,7 +75,7 @@ dataset.persistent = True
 
 You can also use the [IO Plugin](https://github.com/voxel51/fiftyone-plugins/tree/main/plugins/io) to easily import datasets directly in the App.
 
-## [Loading Datasets: Custom Formats](https://docs.voxel51.com/user_guide/dataset_creation/index.html#custom-formats)
+## [Custom Formats](https://docs.voxel51.com/user_guide/dataset_creation/index.html#custom-formats)
 
 To ingest datasets with labels or metadata, the simplest approach is to iterate over your data in a simple Python loop, create a Sample for each data + label(s) pair, and then add those samples to a Dataset.
 
@@ -98,10 +125,30 @@ dataset = fo.Dataset("my-detection-dataset")
 dataset.add_samples(samples)
 ```
 
+## [Setting Values](https://docs.voxel51.com/user_guide/using_datasets.html#setting-values)
 
-## [Loading Data from the Cloud ](https://docs.voxel51.com/user_guide/dataset_creation/index.html#custom-formats)
+Another strategy is to load Samples with no metadata, and then add metadata afterwords. This can be done efficiently in bulk 
+using set_values() to set a field (or embedded field) on each sample in the dataset in a single batch operation.
 
-Upload all files of a certain type within a cloud bucket to your Fiftyone Dataset
+
+```
+# Populate the field on each sample in the dataset
+values = [random.random() for _ in range(len(dataset))]
+dataset.set_values("random", values)
+
+print(dataset.count("random"))  # 50
+print(dataset.bounds("random")) # (0.0041, 0.9973)
+```
+
+When possible, using set_values() is often more efficient than performing the equivalent operation via an explicit iteration over the Dataset because it avoids the need to read Sample instances into memory and sequentially save them.
+
+Note, along with setting values via set_values(), you can also get values in bulk using values().
+
+
+## [Datasets with cloud-backed media](https://docs.voxel51.com/user_guide/dataset_creation/index.html#custom-formats)
+
+Note, almost all filepath-related methods in the FIftyOne Enterprise SDK are cloud aware. Here is an example of 
+uploading all files of a certain type within a cloud bucket to your Fiftyone Dataset.
 
 ```
 import fiftyone as fo
@@ -116,12 +163,6 @@ for s3_uri in s3_files:
 dataset.add_samples(samples)
 dataset.persistent = True # will render the dataset in the UI
 ```
-
-# Dataset Setup
-
-## [Computing Metadata](https://docs.voxel51.com/api/fiftyone.core.collections.html#fiftyone.core.collections.SampleCollection.compute_metadata)
-
-A best practice when creating dataset is to compute metadata so that image heights/widths are available. This can be useful for end-users as well as for optimizing App grid layout performance.
 
 ## [Uploading Data to the Cloud](https://docs.voxel51.com/enterprise/cloud_media.html?highlight=upload_media#:~:text=or%20local%20media.-,The%20upload_media(),-method%20provides%20a)
 
@@ -142,6 +183,13 @@ fos.upload_media(
     progress=True,
 )
 ```
+
+# Dataset Setup
+
+## [Computing Metadata](https://docs.voxel51.com/api/fiftyone.core.collections.html#fiftyone.core.collections.SampleCollection.compute_metadata)
+
+A best practice when creating dataset is to compute metadata so that image heights/widths are available. This can be useful for end-users as well as for optimizing App grid layout performance.
+
 
 ## [Multiple Media Fields](https://docs.voxel51.com/user_guide/app.html#multiple-media-fields)
 
@@ -187,84 +235,15 @@ session = fo.launch_app(dataset)
 
 Adding thumbnail_path to the media_fields property adds it to the Media Field selector under the App’s settings menu, and setting the grid_media_field property to thumbnail_path instructs the App to use the thumbnail images by default in the grid view:
 
-
-
-
-# Adding Metadata to Samples
-## [Setting Values](https://docs.voxel51.com/user_guide/using_datasets.html#setting-values)
-
-
-Another strategy for performing efficient batch edits is to use set_values() to set a field (or embedded field) on each sample in the dataset in a single batch operation:
-
-
-```
-# Delete the field we added earlier
-dataset.delete_sample_field("random")
-
-# Equivalent way to populate the field on each sample in the dataset
-values = [random.random() for _ in range(len(dataset))]
-dataset.set_values("random", values)
-
-print(dataset.count("random"))  # 50
-print(dataset.bounds("random")) # (0.0041, 0.9973)
-```
-
-When possible, using set_values() is often more efficient than performing the equivalent operation via an explicit iteration over the Dataset because it avoids the need to read Sample instances into memory and sequentially save them.
-
-HERE IS ANOTHER EXAMPLE
-However, an equivalent and often more efficient approach is to use values() to extract the slice of data you wish to modify and then use set_values() to save the updated data in a single batch operation:
-
-
-```
-# Remove the tags we added in the previous variation
-dataset.untag_labels("low_confidence")
-
-# Load all predicted detections
-# This is a list of lists of `Detection` instances for each sample
-detections = dataset.values("predictions.detections")
-
-# Add a tag to all low confidence detections
-for sample_detections in detections:
-    for detection in sample_detections:
-        if detection.confidence < 0.06:
-            detection.tags.append("low_confidence")
-
-# Save the updated predictions
-dataset.set_values("predictions.detections", detections)
-
-print(dataset.count_label_tags())
-# {'low_confidence': 447}
-```
-
-## [Updating Samples](https://docs.voxel51.com/user_guide/using_datasets.html#updating-samples)
-
-```
-import fiftyone as fo
-import fiftyone.zoo as foz
-
-dataset = foz.load_zoo_dataset("cifar10", split="train")
-view = dataset.select_fields("ground_truth")
-
-def update_fcn(sample):
-    sample.ground_truth.label = sample.ground_truth.label.upper()
-
-view.update_samples(update_fcn)
-print(dataset.count_values("ground_truth.label"))
-# {'DEER': 5000, 'HORSE': 5000, 'AIRPLANE': 5000, ..., 'DOG': 5000}
-```
-
-
 # Grouped Datasets
 
-## [Group edDatasets](https://docs.voxel51.com/user_guide/groups.html#grouped-datasets)
+## [Grouped Datasets](https://docs.voxel51.com/user_guide/groups.html#grouped-datasets)
 
 FiftyOne supports the creation of grouped datasets, which contain multiple slices of samples of possibly different modalities (e.g., image, video, or 3D scenes) that are organized into groups.
 
-Grouped datasets can be used to represent multiview scenes, where data for multiple perspectives of the same scene can be stored, visualized, and queried in ways that respect the relationships between the slices of data.
+Grouped datasets can be used to represent multiview scenes, where data for multiple perspectives of the same scene can be stored, visualized, and queried together. In sequential acquisitions, each group commonly represents a single moment in time.
 
-In this section, we’ll cover the basics of creating and working with grouped datasets via Python.
-
-Let’s start by creating some test data. We’ll use the quickstart dataset to construct some mocked triples of left/center/right images:
+Here is a basic example of creating and working with grouped datasets via Python.Let’s start by creating some test data. We’ll use the quickstart dataset to construct some mocked triples of left/center/right images:
 
 ```
 import fiftyone as fo
@@ -308,12 +287,7 @@ dataset.add_group_field("group", default="center")
 The optional default parameter specifies the slice of samples that will be returned via the API or visualized in the App’s grid view by default. If you don’t specify a default, one will be inferred from the first sample you add to the dataset.
 
 
-Note: Datasets may contain only one Group field.
-
-
-
 To populate a grouped dataset with samples, create a single Group instance for each group of samples and use Group.element() to generate values for the group field of each Sample object in the group based on their slice’s name. The Sample objects can then simply be added to the dataset as usual:
-
 
 
 ```
@@ -334,20 +308,20 @@ SDK operations on a grouped dataset often operate on the current slice. Here is 
 ```
 print(dataset.group_slices)
 ```
-To Change the current slice, simply set the property to your desired new slice
+To change the current slice, simply set the property to your desired new slice
 ```
-dataset.group_slices = your_new_slice
+dataset.group_slice = your_new_slice
 ```
 
-## [Flatten Slices](https://docs.voxel51.com/api/fiftyone.core.dataset.html?highlight=select_group_slices#fiftyone.core.dataset.Dataset.select_group_slices)
-Sometimes you might want to operate on all group slices, for that you will want a flattened view 
+## [Flattened Views](https://docs.voxel51.com/api/fiftyone.core.dataset.html?highlight=select_group_slices#fiftyone.core.dataset.Dataset.select_group_slices)
+Sometimes you might want to operate on all group slices. For this you can form a flattened view:
 ```
 view = dataset.select_group_slices(media_type='image')
 view.set_values('new_field',range(len(view)))
 ```
 
 # 3D Datasets
-## [3D datasets](https://docs.voxel51.com/user_guide/using_datasets.html#d-datasets)
+## [3D samples](https://docs.voxel51.com/user_guide/using_datasets.html#d-datasets)
 
 Any Sample whose filepath is a file with extension .fo3d is recognized as a 3D sample, and datasets composed of 3D samples have media type 3d.
 
@@ -356,7 +330,6 @@ An FO3D file encapsulates a 3D scene constructed using the Scene class, which pr
 A scene may be explicitly initialized with additional attributes, such as camera, lights, and background. By default, a scene is created with neutral lighting, and a perspective camera whose up is set to Y axis in a right-handed coordinate system.
 
 After a scene is constructed, it should be written to the disk using the scene.write() method, which serializes the scene into an FO3D file.
-
 
 FiftyOne supports the PCD point cloud format. A code snippet to create a PCD object that can be added to a FiftyOne 3D scene is shown below:
 
@@ -390,13 +363,9 @@ pcd.colors = o3d.utility.Vector3dVector(colors)
 
 o3d.io.write_point_cloud("/path/to/point-cloud.pcd", pcd)
 ```
-## [Toy Dataset Example](https://docs.voxel51.com/user_guide/groups.html#toy-dataset)
-
-
-
+## [Example: Grouped Dataset with 3D](https://docs.voxel51.com/user_guide/groups.html#toy-dataset)
 
 The snippet below generates a toy dataset containing 3D cuboids filled with points that demonstrates how 3D detections are represented:
-
 
 ```
 import fiftyone as fo
@@ -431,6 +400,7 @@ scene = fo.Scene()
 scene.add(fo.PointCloud("point cloud", "/tmp/toy.pcd"))
 scene.write("/tmp/toy.fo3d")
 
+# Please note: a new fo.Group() object must be created for every separate group of samples!
 group = fo.Group()
 samples = [
     fo.Sample(
@@ -456,21 +426,10 @@ session = fo.launch_app(dataset)
 ```
 
 
+# Miscellaneous
 
+## [Saved Views](https://docs.voxel51.com/user_guide/using_views.html#saving-views)
 
-
-
-
-
-
-
-[Explore the library](https://docs.voxel51.com/user_guide/basics.html)
-
-Check out [loading datasets](https://docs.voxel51.com/user_guide/dataset_creation/index.html) to see
-how to load your data into FiftyOne.
-
-
-# Saved Views 
 ```
 dataset = foz.load_zoo_dataset("quickstart")
 view = dataset.filter_labels("ground_truth", F("label") == "cat")
@@ -486,10 +445,28 @@ Load a specific saved view
 also_view = dataset.load_saved_view("cats")
 ```
 
-# What’s Next? [Anchor](https://docs.voxel51.com/\#what-s-next)
+
+## [Updating Samples](https://docs.voxel51.com/user_guide/using_datasets.html#updating-samples)
+
+```
+import fiftyone as fo
+import fiftyone.zoo as foz
+
+dataset = foz.load_zoo_dataset("cifar10", split="train")
+view = dataset.select_fields("ground_truth")
+
+def update_fcn(sample):
+    sample.ground_truth.label = sample.ground_truth.label.upper()
+
+view.update_samples(update_fcn)
+print(dataset.count_values("ground_truth.label"))
+# {'DEER': 5000, 'HORSE': 5000, 'AIRPLANE': 5000, ..., 'DOG': 5000}
+```
+
+
+# What’s Next?
 
 Where should you go from here? You could…
-
 
 - Try one of the [tutorials](https://docs.voxel51.com/tutorials/index.html) that demonstrate the unique
 capabilities of FiftyOne
