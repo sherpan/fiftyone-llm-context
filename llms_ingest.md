@@ -18,8 +18,6 @@ For high-volume or production workloads, you may configure a direct MongoDB conn
 
 To work with cloud media locally with your SDK, see the above link to configure your cloud credentials.
 
-See this page 
-
 # Loading Datasets 
 ## [Loading Datasets: Image Folders](https://docs.voxel51.com/user_guide/dataset_creation/index.html#loading-images)
 
@@ -52,9 +50,9 @@ You can also use the [IO Plugin](https://github.com/voxel51/fiftyone-plugins/tre
 
 ## [Loading Datasets: Custom Formats](https://docs.voxel51.com/user_guide/dataset_creation/index.html#custom-formats)
 
-The simplest and most flexible approach to loading your data into FiftyOne is to iterate over your data in a simple Python loop, create a Sample for each data + label(s) pair, and then add those samples to a Dataset.
+To ingest datasets with labels or metadata, the simplest approach is to iterate over your data in a simple Python loop, create a Sample for each data + label(s) pair, and then add those samples to a Dataset.
 
-FiftyOne provides label types for common tasks such as classification, detection, segmentation, and many more. The examples below give you a sense of the basic workflow for a few tasks:
+FiftyOne provides label types for common tasks such as classification, detection, segmentation, and many more. The example below illustrates creating detection objects.
 
 ```
 import glob
@@ -101,7 +99,6 @@ dataset.add_samples(samples)
 ```
 
 
-
 ## [Loading Data from the Cloud ](https://docs.voxel51.com/user_guide/dataset_creation/index.html#custom-formats)
 
 Upload all files of a certain type within a cloud bucket to your Fiftyone Dataset
@@ -117,43 +114,14 @@ for s3_uri in s3_files:
         samples.append(sample)
 
 dataset.add_samples(samples)
-dataset.persistent = True #will render the dataset in the UI
+dataset.persistent = True # will render the dataset in the UI
 ```
-
-If you’re just getting started with a project and all you have is a bunch of image files, you can easily load them into a FiftyOne dataset and start visualizing them in the App:
-
-
-```
-import fiftyone as fo
-
-# Create a dataset from a list of images
-dataset = fo.Dataset.from_images(
-    ["/path/to/image1.jpg", "/path/to/image2.jpg", ...]
-)
-
-# Create a dataset from a directory of images
-dataset = fo.Dataset.from_images_dir("/path/to/images")
-
-# Create a dataset from a glob pattern of images
-dataset = fo.Dataset.from_images_patt("/path/to/images/*.jpg")
-
-```
-
-You can name your Dataset and mark it as persistent
-```
-dataset.name = 'your-dataset-name'
-dataset.persistent = True
-``` 
-
-You can also use the [IO Plugin](https://github.com/voxel51/fiftyone-plugins/tree/main/plugins/io) to easily import datasets directly in the App.
 
 # Dataset Setup
 
 ## [Computing Metadata](https://docs.voxel51.com/api/fiftyone.core.collections.html#fiftyone.core.collections.SampleCollection.compute_metadata)
 
 A best practice when creating dataset is to compute metadata so that image heights/widths are available. This can be useful for end-users as well as for optimizing App grid layout performance.
-
-[compute_metadata](https://docs.voxel51.com/api/fiftyone.core.collections.html#fiftyone.core.collections.SampleCollection.compute_metadata)
 
 ## [Uploading Data to the Cloud](https://docs.voxel51.com/enterprise/cloud_media.html?highlight=upload_media#:~:text=or%20local%20media.-,The%20upload_media(),-method%20provides%20a)
 
@@ -222,10 +190,8 @@ Adding thumbnail_path to the media_fields property adds it to the Media Field se
 
 
 
-
 # Adding Metadata to Samples
 ## [Setting Values](https://docs.voxel51.com/user_guide/using_datasets.html#setting-values)
-
 
 
 Another strategy for performing efficient batch edits is to use set_values() to set a field (or embedded field) on each sample in the dataset in a single batch operation:
@@ -286,8 +252,6 @@ view.update_samples(update_fcn)
 print(dataset.count_values("ground_truth.label"))
 # {'DEER': 5000, 'HORSE': 5000, 'AIRPLANE': 5000, ..., 'DOG': 5000}
 ```
-
-
 
 
 # Grouped Datasets
