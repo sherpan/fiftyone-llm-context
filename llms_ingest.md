@@ -6,6 +6,7 @@
 - [Loading Datasets](#loading-datasets)
   - [Image Folders](#image-folders)
   - [Uploading Local Media to the Cloud](#uploading-local-media-to-the-cloud)
+  - [Download Media from the Cloud](#download-media-from-the-cloud)
   - [Ingesting Metadata and Labels](#ingesting-metadata-and-labels)
   - [Setting Metadata and Labels](#setting-metadata-and-labels)
   - [Cloud-backed Media](#cloud-backed-media)
@@ -77,6 +78,7 @@ You can also use the [IO Plugin](https://github.com/voxel51/fiftyone-plugins/tre
 
 ## [Uploading Local Media to the Cloud](https://docs.voxel51.com/enterprise/cloud_media.html?highlight=upload_media#:~:text=or%20local%20media.-,The%20upload_media(),-method%20provides%20a)
 
+Working with cloud media is only availble in the SDK of FiftyOne Enterprise, not in open-source FiftyOne.
 
 Datasets with local media paths won't have visible media within the Deployed App. To make the media visible, you can use the [fiftyone.core.storage](https://docs.voxel51.com/enterprise/cloud_media.html#fiftyone-core-storage) module to upload the local media to a specified cloud bucket. 
 
@@ -95,6 +97,27 @@ fos.upload_media(
 )
 ```
 
+
+## [Download Media from the Cloud](https://docs.voxel51.com/enterprise/cloud_media.html#working-with-cloud-backed-datasets)
+
+Datasets with cloud media paths can easily be downloaded to the local machine when you need to process the media for use cases like running model inference, computing embeddings, etc. You can use the you can use the [fiftyone.core.storage](https://docs.voxel51.com/enterprise/cloud_media.html#fiftyone-core-storage) module to download media to [a cache](https://docs.voxel51.com/enterprise/cloud_media.html#cloud-media-caching) in the local environment.
+
+```
+# Download all media in a dataset to the local cache
+dataset.download_media()
+
+# Get the local filepath of all samples in the dataset
+local_filepaths = dataset.get_local_paths()
+
+# Get the local filepath of one sample in the dataset
+sample = dataset.first()
+local_filepath = sample.local_path
+
+print(local_path)
+# ~/.fiftyone/__cache__/s3/path/to/image.png
+print(sample.filepath)
+# s3://path/to/image.png
+```
 
 
 ## [Ingesting Metadata and Labels](https://docs.voxel51.com/user_guide/dataset_creation/index.html#custom-formats)
